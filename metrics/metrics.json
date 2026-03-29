@@ -1,0 +1,82 @@
+[
+    {
+        "timestamp": "2026-03-29T03:03:34Z",
+        "tokens_prompt": 1131,
+        "tokens_completion": 370,
+        "total_tokens": 1501,
+        "latency_ms": 6990.19,
+        "estimated_cost_usd": 0.0112
+    },
+    {
+        "timestamp": "2026-03-29T03:05:18Z",
+        "tokens_prompt": 1132,
+        "tokens_completion": 290,
+        "total_tokens": 1422,
+        "latency_ms": 5857.31,
+        "estimated_cost_usd": 0.01001
+    },
+    {
+        "timestamp": "2026-03-29T03:15:57Z",
+        "tokens_prompt": 1142,
+        "tokens_completion": 304,
+        "total_tokens": 1446,
+        "latency_ms": 6348.6,
+        "estimated_cost_usd": 0.01027
+    },
+    {
+        "timestamp": "2026-03-29T03:17:18Z",
+        "tokens_prompt": 1056,
+        "tokens_completion": 150,
+        "total_tokens": 1206,
+        "latency_ms": 4562.97,
+        "estimated_cost_usd": 0.00753
+    },
+    {
+        "timestamp": "2026-03-29T03:36:01Z",
+        "tokens_prompt": 1142,
+        "tokens_completion": 293,
+        "total_tokens": 1435,
+        "latency_ms": 6104.47,
+        "estimated_cost_usd": 0.0101
+    },
+    {
+        "timestamp": "2026-03-29T03:37:05Z",
+        "tokens_prompt": 1123,
+        "tokens_completion": 365,
+        "total_tokens": 1488,
+        "latency_ms": 7063.78,
+        "estimated_cost_usd": 0.01109
+    },
+    {
+        "timestamp": "2026-03-29T03:38:13Z",
+        "tokens_prompt": 1132,
+        "tokens_completion": 391,
+        "total_tokens": 1523,
+        "latency_ms": 8049.65,
+        "estimated_cost_usd": 0.01153
+    },
+    {
+        "timestamp": "2026-03-29T03:41:42Z",
+        "tokens_prompt": 0,
+        "tokens_completion": 0,
+        "total_tokens": 0,
+        "latency_ms": 0,
+        "estimated_cost_usd": 0.0
+    },
+    {
+        "timestamp": "2026-03-29T03:42:18Z",
+        "tokens_prompt": 0,
+        "tokens_completion": 0,
+        "total_tokens": 0,
+        "latency_ms": 0,
+        "estimated_cost_usd": 0.0
+    },
+    {
+        "timestamp": "2026-03-29T03:43:00Z",
+        "tokens_prompt": 1087,
+        "tokens_completion": 182,
+        "total_tokens": 1269,
+        "latency_ms": 4860.1,
+        "estimated_cost_usd": 0.00817
+    }
+]

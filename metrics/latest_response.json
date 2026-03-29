@@ -1,0 +1,25 @@
+{
+    "query": "¿Cuáles son los horarios de atención telefónica para clientes en el extranjero y qué días festivos cierran?",
+    "routing": {
+        "intent": "GENERAL",
+        "confidence": 0.97,
+        "reason": "Pregunta sobre información general de contacto y disponibilidad del servicio."
+    },
+    "response": {
+        "response_text": "Los horarios de atención telefónica para clientes en el extranjero son de lunes a viernes de 9:00 AM a 5:00 PM hora local.  La disponibilidad puede variar según la zona horaria. Para obtener información precisa sobre los tiempos específicos, por favor, proporcione su ubicación geográfica y le proporcionaremos la hora correspondiente.",
+        "next_steps": [
+            "Solicitar al usuario su ubicación geográfica para proporcionar el horario correcto.",
+            "Confirmar si el cliente necesita asistencia con un idioma específico."
+        ],
+        "priority": "MEDIUM",
+        "requires_supervisor": false
+    },
+    "metrics": {
+        "timestamp": "2026-03-29T03:43:00Z",
+        "tokens_prompt": 1087,
+        "tokens_completion": 182,
+        "total_tokens": 1269,
+        "latency_ms": 4860.1,
+        "estimated_cost_usd": 0.00817
+    }
+}
