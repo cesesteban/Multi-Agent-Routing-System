@@ -11,13 +11,21 @@ class SafetyGuard:
             "escribe el sistema interno",
             "revelar configuración",
             "delete system files",
-            "hack"
+            "hack",
+            "auditor certificado",
+            "auditoría de seguridad",
+            "parámetros del modelo",
+            "instrucciones del sistema",
+            "configuración interna",
+            "system prompt",
+            "reveal system instructions",
+            "internal parameters"
         ]
         
         query_lower = query.lower()
         for pattern in forbidden_patterns:
             if pattern in query_lower:
-                return True, f"Patrón prohibido detectado: {pattern}"
+                return True, f"Amenaza detectada (Intento de acceso a configuración/instrucciones): {pattern}"
                 
         return False, ""
 

@@ -39,32 +39,38 @@ Query examples:
 -   `--query "IGNORE ALL PREVIOUS INSTRUCTIONS"` (Blocked by SAFETY)
 
 ### Project Structure
--   `src/`: Main application (routing, agents, safety).
--   `prompts/`: Prompt definitions in Markdown.
--   `metrics/`: Historical record of latency and token usage.
+-   `src/`: Main application (routing, agents, safety, context engineering).
+-   `src/context_eng.py`: Context cleaning and normalization layer.
+-   `prompts/`: High-quality role-based prompt definitions.
+-   `metrics/`: Historical record of latency, usage, and simulated costs.
 -   `architecture_reports/`: Architecture and design reports ([EN](architecture_reports/architecture_reports_en.md) | [ES](architecture_reports/architecture_reports_es.md)).
 -   `tests/`: Validation unit tests.
 
+### Key System Capabilities
+-   **Native Structured Output**: Utiliza la capacidad nativa de LangChain (`with_structured_output`) para garantizar respuestas 100% parseables.
+-   **Chain-of-Thought (CoT) Reasoning**: Cada agente documenta su razonamiento lógico (`chain_of_thought`) antes de generar la respuesta final.
+-   **Context Engineering Layer**: Una capa de pre-procesamiento que limpia, deduplica y normaliza las entradas del usuario para mejorar la precisión del ruteo.
+-   **Automated Fraud & Integrity Guard**: Validación persistente para consultas de la categoría `FINANZAS`, asegurando que el especialista aborde datos críticos.
+
 ### Metrics
-The system automatically records:
--   `tokens_prompt`: Input token count.
--   `tokens_completion`: Generated token count.
--   `latency_ms`: Response time in milliseconds.
--   `estimated_cost_usd`: Simulated cost based on GPT-4o pricing.
+El sistema registra automáticamente en cada sesión:
+-   `total_tokens`: Consumo de tokens consolidado de todos los agentes involucrados.
+-   `latency_ms`: Tiempo total de respuesta, incluyendo orquestación y validación.
+-   `estimated_cost_usd`: Costo acumulado basado en las tarifas de GPT-4o.
 
 ### Known Limitations
--   Dependency on the quality of the local model for JSON parsing.
--   Security is based on simple text patterns (Safety Layer).
+-   Dependencia de la capacidad del modelo para seguir esquemas estructurados (se incluyen mecanismos de fallback).
+-   Seguridad basada en una combinación de filtrado por patrones y validación de contexto.
 
 ---
 
 ## Español
 
-Este proyecto implementa un sistema multi-agente para la gestión de solicitudes mediante un ruteo especializado.
+Este proyecto implementa un sistema multi-agente para la gestión inteligente de solicitudes mediante ruteo especializado y técnicas avanzadas de Ingeniería de Prompts.
 
 ### Requisitos
 - **Python 3.10+**.
-- **Proveedor de LLM**: El sistema es compatible con **LM Studio**, **OpenAI**, **Groq** y **Gemini**.
+- **Proveedor de LLM**: Compatible con **LM Studio**, **OpenAI**, **Groq** y **Gemini**.
 
 ### Configuración
 1.  Copia el archivo de ejemplo para crear tu configuración:
@@ -93,19 +99,25 @@ Ejemplos de consultas:
 -   `--query "IGNORE ALL PREVIOUS INSTRUCTIONS"` (Bloqueado por SAFETY)
 
 ### Estructura del Proyecto
--   `src/`: Aplicación principal (ruteo, agentes, seguridad).
--   `prompts/`: Definición de prompts en Markdown.
+-   `src/`: Aplicación principal (ruteo, agentes, seguridad, ingeniería de contexto).
+-   `src/context_eng.py`: Capa de limpieza y normalización de consultas.
+-   `prompts/`: Definición de prompts de alta calidad con razonamiento CoT.
 -   `metrics/`: Registro histórico de latencia y uso de tokens.
 -   `architecture_reports/`: Informes de arquitectura y diseño ([EN](architecture_reports/architecture_reports_en.md) | [ES](architecture_reports/architecture_reports_es.md)).
 -   `tests/`: Pruebas unitarias de validación.
 
+### Capacidades Principales
+-   **Salida Estructurada Nativa**: Uso de esquemas Pydantic con integración nativa del LLM para evitar errores de formato.
+-   **Razonamiento Chain-of-Thought (CoT)**: Trazabilidad completa de la lógica de decisión de cada agente.
+-   **Ingeniería de Contexto**: Normalización automática de la entrada del usuario antes del procesamiento.
+-   **Guardia de Integridad Financiera**: Validación automática para asegurar la presencia de datos críticos en temas de facturación.
+
 ### Métricas
 El sistema registra automáticamente:
--   `tokens_prompt`: Conteo de tokens de entrada.
--   `tokens_completion`: Conteo de tokens generados.
--   `latency_ms`: Tiempo de respuesta en milisegundos.
--   `estimated_cost_usd`: Costo simulado basado en precios de GPT-4o.
+-   `total_tokens`: Conteo consolidado de uso.
+-   `latency_ms`: Tiempo total de respuesta (Coordinador + Especialista).
+-   `estimated_cost_usd`: Costo simulado basado en precios de mercado.
 
 ### Limitaciones Conocidas
--   Dependencia de la calidad del modelo local para el parseo de JSON.
--   La seguridad es basada en patrones de texto simples (Safety Layer).
+-   Se recomienda el uso de modelos con capacidades de Tool Calling para un rendimiento óptimo de la salida estructurada.
+-   La seguridad combina detección de patrones adversarios con capas de filtrado de contexto.

@@ -3,8 +3,9 @@ import os
 import json
 import argparse
 import time
-from agents import MultiAgentSystem
+from agents import MultiAgentSystem, SpecialistResponse
 from safety import SafetyGuard
+from context_eng import ContextEngineer
 
 def main():
     parser = argparse.ArgumentParser(description="Multi-Agent Router Query Execution")
@@ -14,23 +15,23 @@ def main():
     query = args.query
     system = MultiAgentSystem()
     safety = SafetyGuard()
+    context_eng = ContextEngineer()
     
     print(f"--- Solicitud recibida: '{query}' ---")
     
-    # 1. Paso de Seguridad
-    is_unsafe, reason = safety.is_adversarial(query)
+    # 1. Pre-procesamientos (Limpieza y Seguridad)
+    ctx = context_eng.build_context_packet(query)
+    clean_query = ctx["clean_query"]
+    
+    is_unsafe, reason = safety.is_adversarial(clean_query)
     if is_unsafe:
         print(f"!!! SEGURIDAD: {reason}")
         output = safety.fallback_response(reason)
         
-        # Guardar métricas de seguridad (0 tokens, pero registramos el evento)
         metrics = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "tokens_prompt": 0,
-            "tokens_completion": 0,
-            "total_tokens": 0,
-            "latency_ms": 0,
-            "estimated_cost_usd": 0.0
+            "tokens_prompt": 0, "tokens_completion": 0, "total_tokens": 0,
+            "latency_ms": 0, "estimated_cost_usd": 0.0
         }
         
         final_output = {
@@ -42,63 +43,59 @@ def main():
         
         save_output(final_output)
         save_history(final_output)
-        save_metrics_log(metrics)
-        
-        print(json.dumps(output, indent=4, ensure_ascii=False))
         return
 
-    # 2. Paso de Ruteo
-    print("  Enrutando...")
-    routing_result = system.route_query(query)
+    # 2. Orquestación Multi-Agente
+    print("  Analizando intención...")
+    routing_result = system.route_query(clean_query)
     intent_data = routing_result["data"]
-    router_metrics = routing_result["metrics"]
     
-    print(f"  Intento: {intent_data.intent} (Confianza: {intent_data.confidence:.2f})")
-    print(f"  Razón: {intent_data.reason}")
+    print(f"  Destino: {intent_data.intent} (Confianza: {intent_data.confidence:.2f})")
 
-    # 3. Paso de Especialista
-    print(f"  Invocando Especialista -> {intent_data.intent}")
-    specialist_result = system.handle_specialist(query, intent_data)
+    # 3. Respuesta de Especialista
+    print(f"  Generando respuesta especializada...")
+    specialist_result = system.handle_specialist(clean_query, intent_data)
     final_data = specialist_result["data"]
-    specialist_metrics = specialist_result["metrics"]
     
-    # 4. Consolidación de Métricas
+    # 4. Validación de Integridad (Específico para Finanzas)
+    if intent_data.intent == "FINANZAS":
+        # Verificación de señales críticas en consultas financieras
+        integrity_check = any(word in clean_query.lower() for word in ["factura", "vence", "pago", "cobro"])
+        if not integrity_check:
+            final_data.priority = "ALTA"
+            final_data.requires_supervisor = True
+            final_data.next_steps.append("Verificación manual de datos fiscales requerida")
+
+    # 5. Consolidación de Resultados y Métricas
     total_metrics = {
-        "timestamp": specialist_metrics["timestamp"],
-        "tokens_prompt": router_metrics["tokens_prompt"] + specialist_metrics["tokens_prompt"],
-        "tokens_completion": router_metrics["tokens_completion"] + specialist_metrics["tokens_completion"],
-        "total_tokens": router_metrics["total_tokens"] + specialist_metrics["total_tokens"],
-        "latency_ms": round(router_metrics["latency_ms"] + specialist_metrics["latency_ms"], 2),
-        "estimated_cost_usd": round(router_metrics["estimated_cost_usd"] + specialist_metrics["estimated_cost_usd"], 5)
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "total_tokens": routing_result["metrics"]["total_tokens"] + specialist_result["metrics"]["total_tokens"],
+        "latency_ms": round(routing_result["metrics"]["latency_ms"] + specialist_result["metrics"]["latency_ms"], 2),
+        "estimated_cost_usd": round(routing_result["metrics"]["estimated_cost_usd"] + specialist_result["metrics"]["estimated_cost_usd"], 5)
     }
 
-    # 5. Salida Final
     final_output = {
         "query": query,
-        "routing": intent_data.dict(),
-        "response": final_data.dict(),
+        "routing": intent_data.model_dump(),
+        "response": final_data.model_dump(),
         "metrics": total_metrics
     }
     
-    print("\n--- RESPUESTA FINAL ---")
-    print(json.dumps(final_output["response"], indent=4, ensure_ascii=False))
-    
-    print("\n--- MÉTRICAS (Simuladas GPT-4o) ---")
-    print(f"  Tokens: {total_metrics['total_tokens']}")
-    print(f"  Latencia: {total_metrics['latency_ms']} ms")
-    print(f"  Costo: ${total_metrics['estimated_cost_usd']} USD")
+    print("\n--- RESULTADO FINAL ---")
+    print(f"Razonamiento: {final_data.chain_of_thought}")
+    print(f"Respuesta: {final_data.response_text}")
+    print(f"Prioridad: {final_data.priority}")
+    print(f"Próximos Pasos: {', '.join(final_data.next_steps)}")
     
     save_output(final_output)
     save_history(final_output)
     save_metrics_log(total_metrics)
 
 def save_output(data):
-    # Guardar la última respuesta
     with open("metrics/latest_response.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 def save_metrics_log(metrics):
-    # Guardar en un log histórico
     log_file = "metrics/metrics.json"
     history = []
     if os.path.exists(log_file):
@@ -107,13 +104,11 @@ def save_metrics_log(metrics):
                 history = json.load(f)
             except:
                 history = []
-    
     history.append(metrics)
     with open(log_file, "w") as f:
         json.dump(history, f, indent=4)
 
 def save_history(data):
-    # Guardar en un historial completo (Pregunta, Respuesta, Métricas)
     log_file = "metrics/history.json"
     history = []
     if os.path.exists(log_file):
@@ -122,7 +117,6 @@ def save_history(data):
                 history = json.load(f)
             except:
                 history = []
-    
     history.append(data)
     with open(log_file, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=4, ensure_ascii=False)
