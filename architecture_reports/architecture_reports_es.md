@@ -6,7 +6,7 @@ El sistema utiliza una **Arquitectura de Ruteo con Auditoría Activa (Feedback L
 ### Diagrama de Flujo (Mermaid)
 ```mermaid
 graph TD
-    A[Usuario: Query] --> B[Context Engineering]
+    A[Usuario: Query] --> B[Ingeniería de Contexto]
     B --> C[Capa de Seguridad]
     C --> D[Agente Coordinador + CoT]
     D --> E{Especialista}
@@ -14,9 +14,9 @@ graph TD
     E --> G[Finanzas]
     E --> H[Soporte Técnico]
     E --> I[General]
-    F & G & H & I --> J[Agente Crítico / Auditor]
-    J -- Rechaza (Max 3 intentos) --> E
-    J -- Aprueba --> K[Payload Enriquecido]
+    F & G & H & I -- "Entrega Borrador" --> J[Agente Crítico / Auditor]
+    J -- "Rechaza (Max 3 intentos + Feedback)" --> E
+    J -- "Aprueba" --> K[Payload Enriquecido]
     K --> L[Observador de Métricas]
 ```
 

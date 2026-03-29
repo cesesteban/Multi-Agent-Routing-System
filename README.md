@@ -45,6 +45,23 @@ Query examples:
 -   `architecture_reports/`: Architecture and design reports ([EN](architecture_reports/architecture_reports_en.md) | [ES](architecture_reports/architecture_reports_es.md)).
 -   `tests/`: Validation unit tests.
 
+### System Flow
+```mermaid
+graph TD
+    A[User Query] --> B[Context Engineering]
+    B --> C[Safety Layer]
+    C --> D[Coordinator Agent + CoT]
+    D --> E{Specialist}
+    E --> F[Complaints]
+    E --> G[Finance]
+    E --> H[Tech Support]
+    E --> I[General]
+    F & G & H & I -- "Delivers Draft" --> J[Critic Agent / Auditor]
+    J -- "Rejects (Max 3 attempts + Feedback)" --> E
+    J -- "Approves" --> K[Enriched Payload]
+    K --> L[Metrics Observer]
+```
+
 ### Key System Capabilities
 -   **Native Structured Output**: Uses `with_structured_output` to ensure 100% parseable responses using Pydantic schemas.
 -   **Granular Chain-of-Thought (CoT)**: Each agent generates a structured reasoning in 4 steps (Analysis, Strategy, Risks, Solution), increasing interpretability.
@@ -102,6 +119,23 @@ python src/run_query.py --query "¿Cuándo vence mi próxima factura?"
 -   `prompts/`: Templates de alta fidelidad optimizados para razonamiento complejo y retroalimentación.
 -   `metrics/`: Registro histórico y telemetría de ejecuciones con historial de refinamiento.
 -   `architecture_reports/`: Informes técnicos detallados.
+
+### Flujo del Sistema
+```mermaid
+graph TD
+    A[Consulta de Usuario] --> B[Ingeniería de Contexto]
+    B --> C[Seguridad]
+    C --> D[Agente Coordinador + CoT]
+    D --> E{Especialista}
+    E --> F[Reclamos]
+    E --> G[Finanzas]
+    E --> H[Soporte Técnico]
+    E --> I[General]
+    F & G & H & I -- "Entrega Borrador" --> J[Agente Crítico / Auditor]
+    J -- "Rechaza (Max 3 intentos + Feedback)" --> E
+    J -- "Aprueba" --> K[Payload Enriquecido]
+    K --> L[Observador de Métricas]
+```
 
 ### Métricas
 El sistema registra automáticamente:

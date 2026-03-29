@@ -14,9 +14,9 @@ graph TD
     E --> G[Finance]
     E --> H[Tech Support]
     E --> I[General]
-    F & G & H & I --> J[Critic Agent / Auditor]
-    J -- Rejects (Max 3 attempts) --> E
-    J -- Approves --> K[Enriched Payload]
+    F & G & H & I -- "Delivers Draft" --> J[Critic Agent / Auditor]
+    J -- "Rejects (Max 3 attempts + Feedback)" --> E
+    J -- "Approves" --> K[Enriched Payload]
     K --> L[Metrics Observer]
 ```
 
