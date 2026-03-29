@@ -20,8 +20,7 @@ This project implements a multi-agent system for handling customer requests usin
 2.  Edit the `.env` file to select your `LLM_PROVIDER` and add your API keys. By default, the system will attempt to connect to a local **LM Studio** server at `http://localhost:1234/v1`.
 
 ### Installation
-1.  Clone the repository or enter the `01-PI` folder.
-2.  Install dependencies:
+1.  Install dependencies:
     ```powershell
     pip install -r requirements.txt
     ```
