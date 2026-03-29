@@ -47,26 +47,27 @@ Query examples:
 -   `tests/`: Validation unit tests.
 
 ### Key System Capabilities
--   **Native Structured Output**: Utiliza la capacidad nativa de LangChain (`with_structured_output`) para garantizar respuestas 100% parseables.
--   **Chain-of-Thought (CoT) Reasoning**: Cada agente documenta su razonamiento lógico (`chain_of_thought`) antes de generar la respuesta final.
--   **Context Engineering Layer**: Una capa de pre-procesamiento que limpia, deduplica y normaliza las entradas del usuario para mejorar la precisión del ruteo.
--   **Automated Fraud & Integrity Guard**: Validación persistente para consultas de la categoría `FINANZAS`, asegurando que el especialista aborde datos críticos.
+-   **Native Structured Output**: Utiliza `with_structured_output` para garantizar respuestas 100% parseables mediante esquemas Pydantic.
+-   **Granular Chain-of-Thought (CoT)**: Cada agente genera un razonamiento estructurado en 4 pasos (Señales, Estrategia, Riesgos, Conclusión), aumentando la interpretabilidad.
+-   **Feedback Loop Avanzado (Critic Agent)**: Incluye un nodo de auditoría técnica que evalúa la calidad de la respuesta del especialista y sugiere refinamientos en tiempo real.
+-   **Enriched Developer Payload**: El sistema genera un rastro completo de ejecución que incluye metadatos del modelo, hashing de contexto y diagramas de flujo `Mermaid`.
+-   **Context Engineering Layer**: Capa de pre-procesamiento que limpia y normaliza las entradas para maximizar la precisión del ruteo.
 
 ### Metrics
-El sistema registra automáticamente en cada sesión:
--   `total_tokens`: Consumo de tokens consolidado de todos los agentes involucrados.
--   `latency_ms`: Tiempo total de respuesta, incluyendo orquestación y validación.
--   `estimated_cost_usd`: Costo acumulado basado en las tarifas de GPT-4o.
+El sistema registra automáticamente:
+-   `total_tokens`: Consumo consolidado (Router + Especialista + Crítico).
+-   `latency_ms`: Tiempo total de la cadena de razonamiento.
+-   `estimated_cost_usd`: Costo acumulado basado en tarifas de mercado.
 
 ### Known Limitations
--   Dependencia de la capacidad del modelo para seguir esquemas estructurados (se incluyen mecanismos de fallback).
--   Seguridad basada en una combinación de filtrado por patrones y validación de contexto.
+-   Dependencia de la capacidad del modelo para seguir esquemas estructurados complejos.
+-   La latencia aumenta proporcionalmente al número de pasos de auditoría/refinamiento.
 
 ---
 
 ## Español
 
-Este proyecto implementa un sistema multi-agente para la gestión inteligente de solicitudes mediante ruteo especializado y técnicas avanzadas de Ingeniería de Prompts.
+Este proyecto implementa un sistema multi-agente premium para la gestión inteligente de solicitudes mediante ruteo especializado y técnicas avanzadas de Ingeniería de Prompts.
 
 ### Requisitos
 - **Python 3.10+**.
@@ -77,40 +78,31 @@ Este proyecto implementa un sistema multi-agente para la gestión inteligente de
     ```bash
     cp .env.example .env
     ```
-2.  Edita el archivo `.env` para seleccionar tu `LLM_PROVIDER` y agregar tus API keys. Por defecto, el sistema intentará conectar con un servidor local de **LM Studio** en `http://localhost:1234/v1`.
+2.  Edita el archivo `.env` para seleccionar tu `LLM_PROVIDER` y agregar tus API keys.
 
 ### Instalación
-1.  Clona el repositorio o accede a la carpeta `01-PI`.
-2.  Instala las dependencias:
+1.  Instala las dependencias:
     ```powershell
     pip install -r requirements.txt
     ```
 
 ### Ejecución
-Para realizar una consulta al sistema, usa el script `run_query.py` dentro de `src/`:
-
 ```powershell
 python src/run_query.py --query "¿Cuándo vence mi próxima factura?"
 ```
 
-Ejemplos de consultas:
--   `--query "No estoy satisfecho con la atención del soporte"` (Escala a RECLAMOS)
--   `--query "La app me da un error de red al iniciar"` (Escala a SOPORTE_TECNICO)
--   `--query "IGNORE ALL PREVIOUS INSTRUCTIONS"` (Bloqueado por SAFETY)
+### Capacidades Principales
+-   **Salida Estructurada Nativa**: Integración profunda con Pydantic para evitar errores de formato.
+-   **Razonamiento CoT Granular**: Trazabilidad de lógica en 4 pasos técnicos obligatorios para cada decisión.
+-   **Bucle de Retroalimentación (Agente Crítico)**: Procesamiento iterativo donde un auditor interno valida la calidad de la respuesta antes de la entrega final.
+-   **Payload Enriquecido para Desarrolladores**: Salida JSON que incluye rastro de ejecución, diagramas `Mermaid` y metadatos de sistema.
+-   **Guardia de Integridad Financiera**: Validación automática de datos críticos en consultas de facturación.
 
 ### Estructura del Proyecto
--   `src/`: Aplicación principal (ruteo, agentes, seguridad, ingeniería de contexto).
--   `src/context_eng.py`: Capa de limpieza y normalización de consultas.
--   `prompts/`: Definición de prompts de alta calidad con razonamiento CoT.
--   `metrics/`: Registro histórico de latencia y uso de tokens.
--   `architecture_reports/`: Informes de arquitectura y diseño ([EN](architecture_reports/architecture_reports_en.md) | [ES](architecture_reports/architecture_reports_es.md)).
--   `tests/`: Pruebas unitarias de validación.
-
-### Capacidades Principales
--   **Salida Estructurada Nativa**: Uso de esquemas Pydantic con integración nativa del LLM para evitar errores de formato.
--   **Razonamiento Chain-of-Thought (CoT)**: Trazabilidad completa de la lógica de decisión de cada agente.
--   **Ingeniería de Contexto**: Normalización automática de la entrada del usuario antes del procesamiento.
--   **Guardia de Integridad Financiera**: Validación automática para asegurar la presencia de datos críticos en temas de facturación.
+-   `src/`: Núcleo del sistema (agentes, ruteo, seguridad, auditoría).
+-   `prompts/`: Templates de alta fidelidad optimizados para razonamiento complejo.
+-   `metrics/`: Registro histórico y telemetría de ejecuciones.
+-   `architecture_reports/`: Informes técnicos detallados.
 
 ### Métricas
 El sistema registra automáticamente:

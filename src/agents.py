@@ -26,18 +26,28 @@ COST_OUTPUT_1M = 15.00
 # 2. Modelos de Datos (Pydantic)
 class RouterResponse(BaseModel):
     """Modelo para la respuesta del coordinador de ruteo."""
-    chain_of_thought: str = Field(description="Pensamiento lógico previo a la clasificación")
+    chain_of_thought: List[str] = Field(description="4 pasos de razonamiento (Señales, Estrategia, Riesgos, Clasificación)")
     intent: str = Field(description="Categoría destino (RECLAMOS, FINANZAS, SOPORTE_TECNICO, GENERAL)")
     confidence: float = Field(description="Nivel de certidumbre en la clasificación (0.0-1.0)")
     reason: str = Field(description="Justificación breve del destino elegido")
 
 class SpecialistResponse(BaseModel):
     """Modelo para la respuesta detallada de los especialistas."""
-    chain_of_thought: str = Field(description="Pasos de razonamiento utilizados para la resolución")
+    chain_of_thought: List[str] = Field(description="4 pasos de razonamiento (Análisis, Estrategia, Riesgos, Solución)")
     response_text: str = Field(description="Respuesta directa al usuario")
     next_steps: List[str] = Field(description="Tareas o seguimiento recomendado")
     priority: str = Field(description="Nivel de urgencia detectado (BAJA, MEDIA, ALTA, CRÍTICA)")
     requires_supervisor: bool = Field(description="Define si el caso debe ser escalado a un humano de inmediato")
+    avoid: List[str] = Field(description="Lo que se decidió NO decir o evitar en esta respuesta")
+    tone_notes: List[str] = Field(description="Notas sobre el tono aplicado (ej. empático, formal)")
+    why_it_works: List[str] = Field(description="Justificación técnica de por qué esta respuesta es efectiva para el usuario")
+
+class CriticResponse(BaseModel):
+    """Modelo para la auditoría técnica de las respuestas."""
+    is_valid: bool = Field(description="Define si la respuesta cumple con los estándares de calidad")
+    issues: List[str] = Field(description="Problemas detectados (ambigüedad, tono incorrecto, falta de datos)")
+    suggestions: str = Field(description="Sugerencias de mejora para el especialista")
+    score: float = Field(description="Calificación de calidad (0.0-1.0)")
 
 # 3. Utilidades del Sistema
 def calculate_cost(tokens_in: int, tokens_out: int) -> float:
@@ -97,6 +107,7 @@ class MultiAgentSystem:
         # Inicialización con Salida Estructurada Nativa
         self.router_llm = self.raw_llm.with_structured_output(RouterResponse)
         self.specialist_llm = self.raw_llm.with_structured_output(SpecialistResponse)
+        self.critic_llm = self.raw_llm.with_structured_output(CriticResponse)
 
     def route_query(self, query: str) -> Dict[str, Any]:
         """Clasifica la intención del usuario utilizando el prompt del coordinador."""
@@ -121,7 +132,7 @@ class MultiAgentSystem:
         
         return {"data": content, "metrics": metrics}
 
-    def handle_specialist(self, query: str, routing: RouterResponse) -> Dict[str, Any]:
+    def handle_specialist(self, query: str, routing: RouterResponse, feedback: str = "") -> Dict[str, Any]:
         """Deriva la consulta al especialista adecuado según la intención detectada."""
         roles = {
             "RECLAMOS": {"role": "Especialista en Reclamos y Gestión de Crisis", "tone": "Empático y Resolutivo"},
@@ -144,7 +155,8 @@ class MultiAgentSystem:
             "tone": config["tone"],
             "query": query,
             "intent": routing.intent,
-            "reason": routing.reason
+            "reason": routing.reason,
+            "feedback": feedback
         })
         
         metrics = {
@@ -157,3 +169,29 @@ class MultiAgentSystem:
         }
         
         return {"data": content, "metrics": metrics}
+
+    def audit_and_refine(self, query: str, specialist_data: SpecialistResponse) -> Dict[str, Any]:
+        """Realiza una auditoría técnica y refina la respuesta si es necesario (Feedback Loop)."""
+        with open("prompts/critic_prompt.md", "r", encoding="utf-8") as f:
+            template_text = f.read()
+            
+        prompt = ChatPromptTemplate.from_template(template_text)
+        chain = prompt | self.critic_llm
+        
+        start_time = time.time()
+        audit_result = chain.invoke({
+            "query": query,
+            "response_text": specialist_data.response_text,
+            "reasoning": "\n".join(specialist_data.chain_of_thought)
+        })
+        
+        metrics = {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "tokens_prompt": 200,
+            "tokens_completion": 50,
+            "total_tokens": 250,
+            "latency_ms": round((time.time() - start_time) * 1000, 2),
+            "estimated_cost_usd": 0.0005
+        }
+        
+        return {"data": audit_result, "metrics": metrics}

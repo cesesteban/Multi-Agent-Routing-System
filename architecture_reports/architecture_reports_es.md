@@ -1,44 +1,40 @@
 # Informe de Arquitectura del Sistema de Ruteo Multi-Agente (01-PI)
 
 ## 1. Visión de la Arquitectura
-El sistema está diseñado como una **Arquitectura de Ruteo con Auditoría y Razonamiento**, integrando capas de pre-procesamiento de contexto y validación de salida para maximizar la fiabilidad y transparencia en la atención al cliente.
+El sistema utiliza una **Arquitectura de Ruteo con Auditoría Activa (Feedback Loop)**, diseñada para maximizar la precisión mediante el razonamiento granular y la validación iterativa de respuestas.
 
 ### Diagrama de Flujo (Mermaid)
 ```mermaid
 graph TD
-    A[Usuario: Query] --> B[Ingeniería de Contexto]
+    A[Usuario: Query] --> B[Context Engineering]
     B --> C[Capa de Seguridad]
-    C --> D[Agente Coordinador + CoT]
+    C --> D[Agente Coordinador + CoT 4-Pasos]
     D --> E{Especialista}
     E --> F[Reclamos]
     E --> G[Finanzas]
     E --> H[Soporte Técnico]
     E --> I[General]
-    G --> J[Validación de Integridad Financiera]
-    J --> K[Respuesta Final Validada]
-    F --> K
-    H --> K
-    I --> K
+    F & G & H & I --> J[Agente Crítico / Auditor]
+    J -- Reclaza --> E
+    J -- Aprueba --> K[Payload Enriquecido]
     K --> L[Observador de Métricas]
 ```
 
-## 2. Técnicas de Prompting
--   **Native Structured Output**: Implementación de `with_structured_output` para una integración nativa con el modelo, garantizando respuestas estructuradas sin errores de parseo.
--   **Chain of Thought (CoT)**: Todos los agentes (Coordinador y Especialistas) generan un rastro de razonamiento interno antes de su respuesta final, asegurando coherencia y trazabilidad.
--   **Context Engineering**: Capa de limpieza, deduplicación y normalización automática de la consulta del usuario para optimizar el ruteo.
--   **Integrity Guard**: Un paso de control de calidad automático para la categoría de **Finanzas**, detectando la presencia de datos clave para la resolución.
+## 2. Técnicas de Prompting Avanzadas
+-   **Granular Chain-of-Thought (CoT)**: Obliga a cada agente a documentar su lógica en 4 pasos específicos (Señales, Estrategia, Riesgos, Solución), lo que permite una auditoría técnica inmediata.
+-   **Feedback Loop (Bucle de Retroalimentación)**: La introducción de un **Agente Crítico** que actúa como revisor garantiza que la respuesta del especialista cumpla con los estándares de tono, precisión y seguridad de la compañía.
+-   **Structured Output (Pydantic)**: Uso extensivo de modelos para garantizar que el `avoid` (lo que no se debe decir) y `why_it_works` (justificación técnica) sean campos obligatorios.
 
-## 3. Resumen de Métricas Consolidadas
-| Métrica | Valor Promedio |
-| :--- | :--- |
-| Latencia Total (ms) | ~1400ms |
-| Tasa de Parseo (%) | 100% |
-| Calidad de Respuesta | Alta (validada por CoT) |
+## 3. Payload Enriquecido y Observabilidad
+Para facilitar el desarrollo y la supervisión, el sistema genera un output que incluye:
+- **Hashing de Contexto**: Para trazabilidad e integridad de la entrada original.
+- **Auditoría Trace**: El rastro de issues y sugerencias del Agente Crítico.
+- **Telemetría**: Latencia y consumo de tokens detallado por etapa (Coordination, Resolution, Audit).
 
 ## 4. Fortalezas del Sistema
--   **Robustez**: La salida estructurada nativa elimina la fragilidad del JSON manual en modelos de lenguaje.
--   **Transparencia**: El campo de razonamiento permite auditar la lógica de decisión de los agentes en tiempo real.
--   **Limpieza**: La ingeniería de contexto protege al sistema de ruidos o errores de escritura del usuario final.
+-   **Iteración Inteligente**: El sistema es capaz de autocrítica antes de entregar la respuesta final.
+-   **Defensa en Profundidad**: Combina seguridad de patrones con una auditoría semántica del Agente Crítico.
+-   **Transparencia Total**: Los desarrolladores tienen acceso al razonamiento interno exacto que llevó a cada decisión.
 
 ## 5. Conclusión
-El sistema 01-PI demuestra una forma escalable y segura de manejar diversas solicitudes de clientes al combinar la especialización de agentes con capas robustas de razonamiento y validación de datos.
+01-PI evoluciona de un ruteador simple a un sistema de agentes sofisticado que equilibra la especialización técnica con un control de calidad centralizado, similar a arquitecturas de producción de alto rendimiento.
