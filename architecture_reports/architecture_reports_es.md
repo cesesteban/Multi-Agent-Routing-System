@@ -8,33 +8,34 @@ El sistema utiliza una **Arquitectura de Ruteo con Auditoría Activa (Feedback L
 graph TD
     A[Usuario: Query] --> B[Context Engineering]
     B --> C[Capa de Seguridad]
-    C --> D[Agente Coordinador + CoT 4-Pasos]
+    C --> D[Agente Coordinador + CoT]
     D --> E{Especialista}
     E --> F[Reclamos]
     E --> G[Finanzas]
     E --> H[Soporte Técnico]
     E --> I[General]
     F & G & H & I --> J[Agente Crítico / Auditor]
-    J -- Reclaza --> E
+    J -- Rechaza (Max 3 intentos) --> E
     J -- Aprueba --> K[Payload Enriquecido]
     K --> L[Observador de Métricas]
 ```
 
 ## 2. Técnicas de Prompting Avanzadas
--   **Granular Chain-of-Thought (CoT)**: Obliga a cada agente a documentar su lógica en 4 pasos específicos (Señales, Estrategia, Riesgos, Solución), lo que permite una auditoría técnica inmediata.
--   **Feedback Loop (Bucle de Retroalimentación)**: La introducción de un **Agente Crítico** que actúa como revisor garantiza que la respuesta del especialista cumpla con los estándares de tono, precisión y seguridad de la compañía.
--   **Structured Output (Pydantic)**: Uso extensivo de modelos para garantizar que el `avoid` (lo que no se debe decir) y `why_it_works` (justificación técnica) sean campos obligatorios.
+-   **Granular Chain-of-Thought (CoT)**: Obliga a cada agente a documentar su lógica en 4 pasos específicos (Análisis, Estrategia, Riesgos, Solución), lo que permite una auditoría técnica inmediata.
+-   **True Iterative Feedback Loop (Audit Loop)**: El sistema implementa un bucle recursivo real. Cuando el **Agente Crítico** detecta una falla (ej. placeholders como `[Nombre]`, falta de empatía o datos incompletos), devuelve la respuesta al **Especialista** con instrucciones precisas de mejora. Este proceso se repite hasta un máximo de **3 intentos** para asegurar que la respuesta final sea apta para el usuario.
+-   **Structured Output (Pydantic)**: Uso extensivo de modelos para garantizar que el `avoid` (lo que no se debe decir) y `why_it_works` (justificación técnica) sean campos obligatorios y consistentes.
 
 ## 3. Payload Enriquecido y Observabilidad
 Para facilitar el desarrollo y la supervisión, el sistema genera un output que incluye:
 - **Hashing de Contexto**: Para trazabilidad e integridad de la entrada original.
-- **Auditoría Trace**: El rastro de issues y sugerencias del Agente Crítico.
+- **Audit Trace**: Un historial completo de cada iteración del Crítico, mostrando qué se rechazó y por qué.
+- **Intentos (`attempts`)**: Contador de ciclos realizados para llegar a la respuesta final.
 - **Telemetría**: Latencia y consumo de tokens detallado por etapa (Coordination, Resolution, Audit).
 
 ## 4. Fortalezas del Sistema
--   **Iteración Inteligente**: El sistema es capaz de autocrítica antes de entregar la respuesta final.
+-   **Iteración Inteligente**: El sistema es capaz de autocrítica y corrección automática antes de entregar la respuesta final.
 -   **Defensa en Profundidad**: Combina seguridad de patrones con una auditoría semántica del Agente Crítico.
--   **Transparencia Total**: Los desarrolladores tienen acceso al razonamiento interno exacto que llevó a cada decisión.
+-   **Transparencia Total**: Los desarrolladores tienen acceso al razonamiento interno exacto y al historial de refinamiento.
 
 ## 5. Conclusión
-01-PI evoluciona de un ruteador simple a un sistema de agentes sofisticado que equilibra la especialización técnica con un control de calidad centralizado, similar a arquitecturas de producción de alto rendimiento.
+01-PI evoluciona de un ruteador simple a un sistema de agentes sofisticado que equilibra la especialización técnica con un control de calidad centralizado e iterativo, similar a arquitecturas de producción de alto rendimiento.

@@ -47,27 +47,27 @@ Query examples:
 -   `tests/`: Validation unit tests.
 
 ### Key System Capabilities
--   **Native Structured Output**: Utiliza `with_structured_output` para garantizar respuestas 100% parseables mediante esquemas Pydantic.
--   **Granular Chain-of-Thought (CoT)**: Cada agente genera un razonamiento estructurado en 4 pasos (Señales, Estrategia, Riesgos, Conclusión), aumentando la interpretabilidad.
--   **Feedback Loop Avanzado (Critic Agent)**: Incluye un nodo de auditoría técnica que evalúa la calidad de la respuesta del especialista y sugiere refinamientos en tiempo real.
--   **Enriched Developer Payload**: El sistema genera un rastro completo de ejecución que incluye metadatos del modelo, hashing de contexto y diagramas de flujo `Mermaid`.
--   **Context Engineering Layer**: Capa de pre-procesamiento que limpia y normaliza las entradas para maximizar la precisión del ruteo.
+-   **Native Structured Output**: Uses `with_structured_output` to ensure 100% parseable responses using Pydantic schemas.
+-   **Granular Chain-of-Thought (CoT)**: Each agent generates a structured reasoning in 4 steps (Analysis, Strategy, Risks, Solution), increasing interpretability.
+-   **True Iterative Feedback Loop**: Includes a real and recursive **Audit Loop**. If the Critic Agent rejects the response, the Specialist regenerates it (up to a maximum of **3 attempts**) incorporating improvement suggestions.
+-   **Enriched Developer Payload**: The system generates a full execution trace including model metadata, context hashing, and a historical `audit_trace`.
+-   **Context Engineering Layer**: Pre-processing layer that cleans and normalizes inputs to maximize routing precision.
 
 ### Metrics
-El sistema registra automáticamente:
--   `total_tokens`: Consumo consolidado (Router + Especialista + Crítico).
--   `latency_ms`: Tiempo total de la cadena de razonamiento.
--   `estimated_cost_usd`: Costo acumulado basado en tarifas de mercado.
+The system automatically logs:
+-   `total_tokens`: Consolidated consumption (Router + Specialist Attempts + Critic Attempts).
+-   `latency_ms`: Total time for the reasoning and refinement chain.
+-   `estimated_cost_usd`: Accumulated cost based on total executions.
 
 ### Known Limitations
--   Dependencia de la capacidad del modelo para seguir esquemas estructurados complejos.
--   La latencia aumenta proporcionalmente al número de pasos de auditoría/refinamiento.
+-   Latency increases proportionally to the number of audit retries.
+-   Dependence on the model's quality to correctly interpret the Critic's feedback.
 
 ---
 
 ## Español
 
-Este proyecto implementa un sistema multi-agente premium para la gestión inteligente de solicitudes mediante ruteo especializado y técnicas avanzadas de Ingeniería de Prompts.
+Este proyecto implementa un sistema multi-agente premium para la gestión inteligente de solicitudes mediante ruteo especializado, razonamiento profundo y auto-corrección iterativa.
 
 ### Requisitos
 - **Python 3.10+**.
@@ -92,16 +92,16 @@ python src/run_query.py --query "¿Cuándo vence mi próxima factura?"
 ```
 
 ### Capacidades Principales
--   **Salida Estructurada Nativa**: Integración profunda con Pydantic para evitar errores de formato.
--   **Razonamiento CoT Granular**: Trazabilidad de lógica en 4 pasos técnicos obligatorios para cada decisión.
--   **Bucle de Retroalimentación (Agente Crítico)**: Procesamiento iterativo donde un auditor interno valida la calidad de la respuesta antes de la entrega final.
--   **Payload Enriquecido para Desarrolladores**: Salida JSON que incluye rastro de ejecución, diagramas `Mermaid` y metadatos de sistema.
+-   **Salida Estructurada Nativa**: Integración profunda con Pydantic para evitar errores de formato en entornos de producción.
+-   **Razonamiento CoT Granular**: Trazabilidad de lógica en 4 pasos técnicos obligatorios para cada decisión de cada agente.
+-   **Bucle de Auto-corrección Real**: Procesamiento iterativo (Audit Loop) donde un auditor interno valida la calidad y, si es necesario, obliga al especialista a re-generar la respuesta (máximo **3 ciclos**) hasta alcanzar el estándar de excelencia.
+-   **Payload Enriquecido para Desarrolladores**: Salida JSON que incluye rastro de ejecución completo y el historial de auditoría (`audit_trace`).
 -   **Guardia de Integridad Financiera**: Validación automática de datos críticos en consultas de facturación.
 
 ### Estructura del Proyecto
 -   `src/`: Núcleo del sistema (agentes, ruteo, seguridad, auditoría).
--   `prompts/`: Templates de alta fidelidad optimizados para razonamiento complejo.
--   `metrics/`: Registro histórico y telemetría de ejecuciones.
+-   `prompts/`: Templates de alta fidelidad optimizados para razonamiento complejo y retroalimentación.
+-   `metrics/`: Registro histórico y telemetría de ejecuciones con historial de refinamiento.
 -   `architecture_reports/`: Informes técnicos detallados.
 
 ### Métricas
