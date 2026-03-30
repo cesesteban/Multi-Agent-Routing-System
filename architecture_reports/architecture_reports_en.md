@@ -1,7 +1,7 @@
-# Multi-Agent Routing System Architecture Report (01-PI)
+# Multi-Agent RAG System Architecture Report (01-PI)
 
 ## 1. Vision of Architecture
-The system uses a **Routing-with-Active-Auditing & Reasoning Architecture (Feedback Loop)**, designed to maximize precision through granular reasoning and iterative response validation.
+The system uses a **Retrieval-Augmented Routing with Autonomous Evaluation & Tracing Architecture**, designed to maximize precision through granular reasoning, external knowledge retrieval, and automated quality scoring.
 
 ### Flow Diagram (Mermaid)
 ```mermaid

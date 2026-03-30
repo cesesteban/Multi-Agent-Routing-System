@@ -2,14 +2,18 @@ import os
 from langchain_community.document_loaders import TextLoader, DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from config import Config
 
 class RAGManager:
     """Gestiona la carga de documentos, creación de índices y recuperación para RAG."""
     
-    def __init__(self, provider="openai"):
-        self.embeddings = OpenAIEmbeddings() # Por defecto usa OpenAI, se puede parametrizar
+    def __init__(self):
+        # Utiliza embeddings locales para no requerir API Key de OpenAI
+        print("  [RAG] Inicializando embeddings locales (HuggingFace)...")
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2"
+        )
         self.vectorstores = {}
 
     def _get_vectorstore(self, department: str):
@@ -17,10 +21,18 @@ class RAGManager:
         if department in self.vectorstores:
             return self.vectorstores[department]
         
-        path = Config.DATA_PATH_RRHH if department == "RRHH" else Config.DATA_PATH_TECH
+        # Mapeo de departamentos a rutas
+        paths = {
+            "RRHH": Config.DATA_PATH_RRHH,
+            "TECNOLOGIA": Config.DATA_PATH_TECH,
+            "FINANZAS": Config.DATA_PATH_FINANZAS,
+            "RECLAMOS": Config.DATA_PATH_RECLAMOS,
+            "GENERAL": Config.DATA_PATH_GENERAL
+        }
         
-        if not os.path.exists(path) or not os.listdir(path):
-            print(f"WARNING: No hay documentos en {path}")
+        path = paths.get(department)
+        if not path or not os.path.exists(path) or not os.listdir(path):
+            print(f"WARNING: No hay documentos o ruta inválida para {department} en {path}")
             return None
             
         loader = DirectoryLoader(path, glob="*.md", loader_cls=TextLoader)
@@ -40,7 +52,8 @@ class RAGManager:
 
     def retrieve_context(self, query: str, department: str) -> str:
         """Busca información relevante en el vectorstore del departamento."""
-        if department not in ["RRHH", "TECNOLOGIA"]:
+        valid_departments = ["RRHH", "TECNOLOGIA", "FINANZAS", "RECLAMOS", "GENERAL"]
+        if department not in valid_departments:
             return ""
             
         vectorstore = self._get_vectorstore(department)

@@ -1,7 +1,7 @@
-# Informe de Arquitectura del Sistema de Ruteo Multi-Agente (01-PI)
+# Reporte de Arquitectura del Sistema RAG Multi-Agente (01-PI)
 
 ## 1. Visión de la Arquitectura
-El sistema utiliza una **Arquitectura de Ruteo con Auditoría Activa (Feedback Loop)**, diseñada para maximizar la precisión mediante el razonamiento granular y la validación iterativa de respuestas.
+El sistema utiliza una **Arquitectura de Ruteo Aumentada con Recuperación (RAG), Evaluación Autónoma y Trazabilidad**, diseñada para maximizar la precisión mediante el razonamiento granular, la recuperación de conocimiento externo y la calificación automática de calidad.
 
 ### Diagrama de Flujo (Mermaid)
 ```mermaid

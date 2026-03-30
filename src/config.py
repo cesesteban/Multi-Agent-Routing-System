@@ -25,6 +25,9 @@ class Config:
     # RAG Data Paths
     DATA_PATH_RRHH = os.path.join(os.getcwd(), "data", "rrhh")
     DATA_PATH_TECH = os.path.join(os.getcwd(), "data", "tecnologia")
+    DATA_PATH_FINANZAS = os.path.join(os.getcwd(), "data", "finanzas")
+    DATA_PATH_RECLAMOS = os.path.join(os.getcwd(), "data", "reclamos")
+    DATA_PATH_GENERAL = os.path.join(os.getcwd(), "data", "general")
 
     @classmethod
     def validate(cls):

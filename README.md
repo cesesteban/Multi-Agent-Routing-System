@@ -129,9 +129,9 @@ graph TD
     D --> E{Specialist}
     E --> F[RRHH - RAG]
     E --> G[TECNOLOGIA - RAG]
-    E --> H[Finanzas]
-    E --> I[Reclamos]
-    E --> J[General]
+    E --> H[FINANZAS - RAG]
+    E --> I[RECLAMOS - RAG]
+    E --> J[GENERAL - RAG]
     F & G & H & I & J -- "Draft" --> K[Critic Agent / Auditor]
     K -- "Rejects (Feedback)" --> E
     K -- "Approves" --> L[Final Response]

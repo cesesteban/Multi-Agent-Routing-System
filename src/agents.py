@@ -1,11 +1,15 @@
 import json
 import time
+import os
 from enum import Enum
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
+from langfuse.langchain import CallbackHandler
+from langfuse import Langfuse
+from rag import RAGManager
 from config import Config
 
 # Intentar importar proveedores opcionales
@@ -116,12 +120,15 @@ class MultiAgentSystem:
         
         # Inicialización de Langfuse
         self.langfuse_handler = None
+        self.langfuse_client = None
         if Config.LANGFUSE_PUBLIC_KEY and Config.LANGFUSE_SECRET_KEY:
-            self.langfuse_handler = CallbackHandler(
+            self.langfuse_handler = CallbackHandler()
+            self.langfuse_client = Langfuse(
                 public_key=Config.LANGFUSE_PUBLIC_KEY,
                 secret_key=Config.LANGFUSE_SECRET_KEY,
                 host=Config.LANGFUSE_HOST
             )
+		
         
         # Inicialización con Salida Estructurada Nativa
         self.router_llm = self.raw_llm.with_structured_output(RouterResponse)
@@ -167,9 +174,10 @@ class MultiAgentSystem:
         
         config_role = roles.get(routing.intent, roles["GENERAL"])
         
-        # Recuperación RAG si aplica
+        # Recuperación RAG (Habilitado para todas las categorías)
         context = ""
-        if routing.intent in ["RRHH", "TECNOLOGIA"]:
+        valid_rag_intents = ["RRHH", "TECNOLOGIA", "FINANZAS", "RECLAMOS", "GENERAL"]
+        if routing.intent in valid_rag_intents:
             print(f"  [RAG] Recuperando contexto para {routing.intent}...")
             context = self.rag.retrieve_context(query, routing.intent)
         
@@ -248,12 +256,9 @@ class MultiAgentSystem:
         }, config=llm_config)
         
         # Registrar puntaje en Langfuse si está disponible
-        if self.langfuse_handler:
+        if self.langfuse_client:
             try:
-                # El callback handler de LangChain a veces no expone directamente el trace_id aquí,
-                # pero Langfuse asocia los scores si usamos el SDK o si el handler está activo.
-                # Para cumplir el requerimiento de "Agente Evaluador dentro de Langfuse":
-                self.langfuse_handler.langfuse.score(
+                self.langfuse_client.score(
                     name="rag_quality",
                     value=eval_result.final_score,
                     comment=eval_result.justification
