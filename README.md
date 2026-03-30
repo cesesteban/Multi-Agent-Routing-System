@@ -123,18 +123,21 @@ python src/run_query.py --query "¿Cuándo vence mi próxima factura?"
 ### Flujo del Sistema
 ```mermaid
 graph TD
-    A[Consulta de Usuario] --> B[Ingeniería de Contexto]
-    B --> C[Seguridad]
-    C --> D[Agente Coordinador + CoT]
-    D --> E{Especialista}
-    E --> F[Reclamos]
-    E --> G[Finanzas]
-    E --> H[Soporte Técnico]
-    E --> I[General]
-    F & G & H & I -- "Entrega Borrador" --> J[Agente Crítico / Auditor]
-    J -- "Rechaza (Max 3 intentos + Feedback)" --> E
-    J -- "Aprueba" --> K[Payload Enriquecido]
-    K --> L[Observador de Métricas]
+    A[User Query] --> B[Context Engineering]
+    B --> C[Safety Layer]
+    C --> D[Coordinator Agent + CoT]
+    D --> E{Specialist}
+    E --> F[RRHH - RAG]
+    E --> G[TECNOLOGIA - RAG]
+    E --> H[Finanzas]
+    E --> I[Reclamos]
+    E --> J[General]
+    F & G & H & I & J -- "Draft" --> K[Critic Agent / Auditor]
+    K -- "Rejects (Feedback)" --> E
+    K -- "Approves" --> L[Final Response]
+    L --> M[Evaluator Agent]
+    M --> N[Langfuse Score & Trace]
+    N --> O[Metrics Observer]
 ```
 
 ### Métricas

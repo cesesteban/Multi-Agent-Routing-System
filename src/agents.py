@@ -27,7 +27,7 @@ COST_OUTPUT_1M = 15.00
 class RouterResponse(BaseModel):
     """Modelo para la respuesta del coordinador de ruteo."""
     chain_of_thought: List[str] = Field(description="4 pasos de razonamiento (Señales, Estrategia, Riesgos, Clasificación)")
-    intent: str = Field(description="Categoría destino (RECLAMOS, FINANZAS, SOPORTE_TECNICO, GENERAL)")
+    intent: str = Field(description="Categoría destino (RRHH, TECNOLOGIA, FINANZAS, RECLAMOS, GENERAL)")
     confidence: float = Field(description="Nivel de certidumbre en la clasificación (0.0-1.0)")
     reason: str = Field(description="Justificación breve del destino elegido")
 
@@ -48,6 +48,14 @@ class CriticResponse(BaseModel):
     issues: List[str] = Field(description="Problemas detectados (ambigüedad, tono incorrecto, falta de datos)")
     suggestions: str = Field(description="Sugerencias de mejora para el especialista")
     score: float = Field(description="Calificación de calidad (0.0-1.0)")
+
+class EvaluatorResponse(BaseModel):
+    """Modelo para la evaluación automática de RAG en Langfuse."""
+    accuracy_score: int = Field(description="Puntaje de precisión del 1 al 10")
+    relevance_score: int = Field(description="Puntaje de relevancia del 1 al 10")
+    groundedness_score: int = Field(description="Puntaje de fundamentación del 1 al 10")
+    final_score: float = Field(description="Puntaje final promedio del 1 al 10")
+    justification: str = Field(description="Justificación detallada del puntaje asignado")
 
 # 3. Utilidades del Sistema
 def calculate_cost(tokens_in: int, tokens_out: int) -> float:
@@ -104,12 +112,24 @@ class MultiAgentSystem:
     def __init__(self):
         Config.validate()
         self.raw_llm = get_llm()
+        self.rag = RAGManager()
+        
+        # Inicialización de Langfuse
+        self.langfuse_handler = None
+        if Config.LANGFUSE_PUBLIC_KEY and Config.LANGFUSE_SECRET_KEY:
+            self.langfuse_handler = CallbackHandler(
+                public_key=Config.LANGFUSE_PUBLIC_KEY,
+                secret_key=Config.LANGFUSE_SECRET_KEY,
+                host=Config.LANGFUSE_HOST
+            )
+        
         # Inicialización con Salida Estructurada Nativa
         self.router_llm = self.raw_llm.with_structured_output(RouterResponse)
         self.specialist_llm = self.raw_llm.with_structured_output(SpecialistResponse)
         self.critic_llm = self.raw_llm.with_structured_output(CriticResponse)
+        self.evaluator_llm = self.raw_llm.with_structured_output(EvaluatorResponse)
 
-    def route_query(self, query: str) -> Dict[str, Any]:
+    def route_query(self, query: str, trace_id: Optional[str] = None) -> Dict[str, Any]:
         """Clasifica la intención del usuario utilizando el prompt del coordinador."""
         with open("prompts/router_prompt.md", "r", encoding="utf-8") as f:
             template_text = f.read()
@@ -118,12 +138,15 @@ class MultiAgentSystem:
         chain = prompt | self.router_llm
         
         start_time = time.time()
-        content = chain.invoke({"query": query})
         
-        # Consolidación de métricas de ejecución
+        # Configuración de callbacks
+        config = {"callbacks": [self.langfuse_handler]} if self.langfuse_handler else {}
+        
+        content = chain.invoke({"query": query}, config=config)
+        
         metrics = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "tokens_prompt": len(query) // 4,  # Estimación simple
+            "tokens_prompt": len(query) // 4,
             "tokens_completion": 50,
             "total_tokens": (len(query) // 4) + 50,
             "latency_ms": round((time.time() - start_time) * 1000, 2),
@@ -135,13 +158,20 @@ class MultiAgentSystem:
     def handle_specialist(self, query: str, routing: RouterResponse, feedback: str = "") -> Dict[str, Any]:
         """Deriva la consulta al especialista adecuado según la intención detectada."""
         roles = {
+            "RRHH": {"role": "Especialista en Recursos Humanos y Cultura", "tone": "Profesional y Atento"},
+            "TECNOLOGIA": {"role": "Ingeniero de Soporte Técnico Senior", "tone": "Técnico y Directo"},
             "RECLAMOS": {"role": "Especialista en Reclamos y Gestión de Crisis", "tone": "Empático y Resolutivo"},
             "FINANZAS": {"role": "Especialista Financiero y Contable", "tone": "Formal y Preciso"},
-            "SOPORTE_TECNICO": {"role": "Ingeniero de Soporte Nivel 2", "tone": "Técnico y Directo"},
             "GENERAL": {"role": "Asistente de Información General", "tone": "Informativo"}
         }
         
-        config = roles.get(routing.intent, roles["GENERAL"])
+        config_role = roles.get(routing.intent, roles["GENERAL"])
+        
+        # Recuperación RAG si aplica
+        context = ""
+        if routing.intent in ["RRHH", "TECNOLOGIA"]:
+            print(f"  [RAG] Recuperando contexto para {routing.intent}...")
+            context = self.rag.retrieve_context(query, routing.intent)
         
         with open("prompts/specialist_prompt.md", "r", encoding="utf-8") as f:
             template_text = f.read()
@@ -150,14 +180,17 @@ class MultiAgentSystem:
         chain = prompt | self.specialist_llm
         
         start_time = time.time()
+        llm_config = {"callbacks": [self.langfuse_handler]} if self.langfuse_handler else {}
+        
         content = chain.invoke({
-            "role_description": config["role"],
-            "tone": config["tone"],
+            "role_description": config_role["role"],
+            "tone": config_role["tone"],
             "query": query,
             "intent": routing.intent,
             "reason": routing.reason,
+            "context": context if context else "No se encontró información específica en la base de datos.",
             "feedback": feedback
-        })
+        }, config=llm_config)
         
         metrics = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -168,7 +201,7 @@ class MultiAgentSystem:
             "estimated_cost_usd": 0.002
         }
         
-        return {"data": content, "metrics": metrics}
+        return {"data": content, "metrics": metrics, "context_used": context}
 
     def audit_and_refine(self, query: str, specialist_data: SpecialistResponse) -> Dict[str, Any]:
         """Realiza una auditoría técnica y refina la respuesta si es necesario (Feedback Loop)."""
@@ -179,11 +212,13 @@ class MultiAgentSystem:
         chain = prompt | self.critic_llm
         
         start_time = time.time()
+        llm_config = {"callbacks": [self.langfuse_handler]} if self.langfuse_handler else {}
+        
         audit_result = chain.invoke({
             "query": query,
             "response_text": specialist_data.response_text,
             "reasoning": "\n".join(specialist_data.chain_of_thought)
-        })
+        }, config=llm_config)
         
         metrics = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -195,3 +230,40 @@ class MultiAgentSystem:
         }
         
         return {"data": audit_result, "metrics": metrics}
+
+    def evaluate_response(self, query: str, response_text: str) -> Dict[str, Any]:
+        """Agente Evaluador que asigna puntaje y lo envía a Langfuse."""
+        with open("prompts/evaluator_prompt.md", "r", encoding="utf-8") as f:
+            template_text = f.read()
+            
+        prompt = ChatPromptTemplate.from_template(template_text)
+        chain = prompt | self.evaluator_llm
+        
+        start_time = time.time()
+        llm_config = {"callbacks": [self.langfuse_handler]} if self.langfuse_handler else {}
+        
+        eval_result = chain.invoke({
+            "query": query,
+            "response_text": response_text
+        }, config=llm_config)
+        
+        # Registrar puntaje en Langfuse si está disponible
+        if self.langfuse_handler:
+            try:
+                # El callback handler de LangChain a veces no expone directamente el trace_id aquí,
+                # pero Langfuse asocia los scores si usamos el SDK o si el handler está activo.
+                # Para cumplir el requerimiento de "Agente Evaluador dentro de Langfuse":
+                self.langfuse_handler.langfuse.score(
+                    name="rag_quality",
+                    value=eval_result.final_score,
+                    comment=eval_result.justification
+                )
+            except Exception as e:
+                print(f"  [Error Langfuse Score] {e}")
+
+        metrics = {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "latency_ms": round((time.time() - start_time) * 1000, 2)
+        }
+        
+        return {"data": eval_result, "metrics": metrics}

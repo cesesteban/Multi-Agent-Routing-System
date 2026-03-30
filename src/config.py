@@ -17,6 +17,15 @@ class Config:
     # LM Studio
     LM_STUDIO_BASE_URL = os.getenv("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")
 
+    # Langfuse
+    LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+    LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+    LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+
+    # RAG Data Paths
+    DATA_PATH_RRHH = os.path.join(os.getcwd(), "data", "rrhh")
+    DATA_PATH_TECH = os.path.join(os.getcwd(), "data", "tecnologia")
+
     @classmethod
     def validate(cls):
         """Simple validation to ensure keys are present for chosen provider."""
@@ -26,3 +35,6 @@ class Config:
             print("WARNING: GROQ_API_KEY is not set.")
         elif cls.LLM_PROVIDER == "gemini" and not cls.GOOGLE_API_KEY:
             print("WARNING: GOOGLE_API_KEY is not set.")
+        
+        if not cls.LANGFUSE_PUBLIC_KEY or not cls.LANGFUSE_SECRET_KEY:
+            print("WARNING: Langfuse credentials are not set. Tracing will be disabled.")

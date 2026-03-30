@@ -6,3 +6,8 @@ python-dotenv
 pydantic
 tiktoken
 pytest
+langfuse
+chromadb
+langchain-chroma
+langchain-community
+sentence-transformers

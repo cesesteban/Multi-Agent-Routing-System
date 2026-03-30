@@ -58,6 +58,7 @@ def main():
     max_attempts = 3
     feedback = ""
     audit_history = []
+    context_used = ""
     
     while attempts < max_attempts:
         attempts += 1
@@ -65,6 +66,7 @@ def main():
         
         specialist_result = system.handle_specialist(clean_query, intent_data, feedback=feedback)
         final_data = specialist_result["data"]
+        context_used = specialist_result.get("context_used", "")
         
         print(f"  [{attempts}/{max_attempts}] Ejecutando Auditoría de Calidad...")
         audit_result = system.audit_and_refine(clean_query, final_data)
@@ -79,23 +81,18 @@ def main():
             feedback = f"Issues detectados: {', '.join(critic_data.issues)}. Sugerencia: {critic_data.suggestions}"
             if attempts < max_attempts:
                 print(f"  [ACCIÓN] Re-intentando con retroalimentación...")
-            else:
-                print(f"  [ALERTA] Se alcanzó el máximo de intentos. Entregando última versión.")
 
-    # 4. Validación de Integridad (Específico para Finanzas)
-    # Esta validación se mantiene como regla de negocio adicional post-IA
-    if intent_data.intent == "FINANZAS":
-        integrity_check = any(word in clean_query.lower() for word in ["factura", "vence", "pago", "cobro"])
-        if not integrity_check:
-            final_data.priority = "ALTA"
-            final_data.requires_supervisor = True
-            final_data.next_steps.append("Verificación manual de datos fiscales requerida (Integrity Guard)")
+    # 4. Agente Evaluador RAG (Bonus)
+    print("  [Bonus] Ejecutando Agente Evaluador RAG...")
+    eval_result = system.evaluate_response(clean_query, final_data.response_text)
+    evaluation = eval_result["data"]
+    print(f"  [Score] Calidad RAG: {evaluation.final_score}/10")
 
     # 5. Generación de Payload Enriquecido
     total_metrics = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "total_tokens": routing_result["metrics"]["total_tokens"] + (specialist_result["metrics"]["total_tokens"] * attempts) + (audit_result["metrics"]["total_tokens"] * attempts),
-        "latency_ms": round(routing_result["metrics"]["latency_ms"] + (specialist_result["metrics"]["latency_ms"] * attempts) + (audit_result["metrics"]["latency_ms"] * attempts), 2),
+        "latency_ms": round(routing_result["metrics"]["latency_ms"] + (specialist_result["metrics"]["latency_ms"] * attempts) + (audit_result["metrics"]["latency_ms"] * attempts) + eval_result["metrics"]["latency_ms"], 2),
         "estimated_cost_usd": round(routing_result["metrics"]["estimated_cost_usd"] + (specialist_result["metrics"]["estimated_cost_usd"] * attempts) + (audit_result["metrics"]["estimated_cost_usd"] * attempts), 5)
     }
 
@@ -103,18 +100,21 @@ def main():
         "__system": {
             "model": Config.MODEL_NAME,
             "context_hash": ctx["context_hash"],
-            "attempts": attempts
+            "attempts": attempts,
+            "rag_context": context_used[:200] + "..." if context_used else None
         },
         "query": query,
         "routing": intent_data.model_dump(),
         "audit_trace": audit_history,
+        "evaluation": evaluation.model_dump(),
         "response": final_data.model_dump(),
         "metrics": total_metrics
     }
     
     print("\n" + "="*50)
-    print("--- RESULTADO FINAL (CORE) ---")
+    print("--- RESULTADO FINAL (CORE + RAG + EVAL) ---")
     print("="*50)
+    # ... [Rest is formatting]
     print(f"\nRazonamiento (CoT):")
     for step in final_data.chain_of_thought:
         print(f"  - {step}")
