@@ -1206,5 +1206,69 @@
             "latency_ms": 99900.49,
             "estimated_cost_usd": 0.0085
         }
+    },
+    {
+        "__system": {
+            "model": "local-model",
+            "context_hash": "f3c653c97de2",
+            "attempts": 1,
+            "rag_context": "## Regalos y CortesÃ­as\nNo se permite la aceptaciÃ³n de regalos de proveedores que superen los $50 USD en valor de mercado.\n\n# CÃ³digo de Ã‰tica y Conducta Profesional\n\n## Principios Fundamentales\n- *..."
+        },
+        "query": "Un proveedor me ofreció una tarjeta de regalo de 00 por mi aniversario. ¿Puedo aceptarla según nuestro código de conducta?",
+        "routing": {
+            "chain_of_thought": [
+                "Señales Clave: La consulta del usuario se centra en la aceptación de una tarjeta de regalo como parte de su aniversario, lo que sugiere un contexto interno. El tono emocional parece ser neutral o informativo.",
+                "Estrategia de Ruteo: Dado que el tema es relacionado con políticas internas y beneficios para empleados, creo que la categoría más adecuada es RRHH.",
+                "Riesgos: No identifico riesgos significativos en esta clasificación, ya que la pregunta parece ser una consulta legítima sobre las políticas de la empresa.",
+                "Clasificación: Considerando el contexto y la naturaleza de la pregunta, creo que la categoría correcta es RRHH. La respuesta a esta pregunta ayudará a clarificar si se puede aceptar la tarjeta de regalo según nuestro código de conducta."
+            ],
+            "intent": "RRHH",
+            "confidence": 0.9,
+            "reason": "La consulta del usuario parece ser una pregunta informativa sobre las políticas internas de la empresa, lo que hace que RRHH sea la categoría más adecuada."
+        },
+        "audit_trace": [
+            {
+                "is_valid": true,
+                "issues": [],
+                "suggestions": "",
+                "score": 6.0
+            }
+        ],
+        "evaluation": {
+            "accuracy_score": 9,
+            "relevance_score": 8,
+            "groundedness_score": 10,
+            "final_score": 9.0,
+            "justification": "La respuesta final es precisa y bien fundamentada, ya que se basa en la información del Código de Ética y Conducta. Sin embargo, podría ser más relevante si se enfocara directamente en la pregunta principal sin divagar sobre conflictos de intereses."
+        },
+        "response": {
+            "chain_of_thought": [
+                "El usuario ha recibido una tarjeta de regalo por su aniversario, lo que plantea la pregunta sobre si se puede aceptar según las políticas de la empresa.",
+                "La información proporcionada indica que no se permite la aceptación de regalos de proveedores que superen los $50 USD en valor de mercado.",
+                "Es importante evaluar si la tarjeta de regalo cumple con este límite y si hay algún conflicto de intereses involucrado.",
+                "Si se determina que el regalo no cumple con las políticas, es necesario informar al usuario sobre la decisión y proporcionarle orientación sobre cómo proceder."
+            ],
+            "response_text": "Entiendo tu preocupación sobre la aceptación del regalo de aniversario. Según nuestro Código de Ética y Conducta, no se permite la aceptación de regalos de proveedores que superen los $50 USD en valor de mercado. En este caso, la tarjeta de regalo de 00 parece cumplir con esta política. Sin embargo, es importante considerar si hay algún conflicto de intereses involucrado. Si no hay ningún conflicto, te recomiendo aceptar el regalo y expresar tu gratitud al proveedor. Recuerda que siempre debes actuar con integridad y respeto en todas tus interacciones.",
+            "next_steps": [
+                "Verificar si hay algún conflicto de intereses involucrado",
+                "Evaluar si la tarjeta de regalo cumple con las políticas de la empresa",
+                "Informar al usuario sobre la decisión y proporcionarle orientación sobre cómo proceder"
+            ],
+            "priority": "BAJA",
+            "requires_supervisor": false,
+            "avoid": [
+                "[Nombre]",
+                "nuestro protocolo",
+                "nuestro código"
+            ],
+            "tone_notes": [],
+            "why_it_works": []
+        },
+        "metrics": {
+            "timestamp": "2026-03-30T21:14:17Z",
+            "total_tokens": 460,
+            "latency_ms": 19665.44,
+            "estimated_cost_usd": 0.0035
+        }
     }
 ]

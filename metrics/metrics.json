@@ -186,5 +186,11 @@
         "total_tokens": 1220,
         "latency_ms": 99900.49,
         "estimated_cost_usd": 0.0085
+    },
+    {
+        "timestamp": "2026-03-30T21:14:17Z",
+        "total_tokens": 460,
+        "latency_ms": 19665.44,
+        "estimated_cost_usd": 0.0035
     }
 ]
